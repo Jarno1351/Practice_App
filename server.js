@@ -46,12 +46,16 @@ app.get("/",(req, res) => {
     if(req.user){
         return res.render('dashboard')
     }
-    
+
     res.render("homepage")
 })
 //Creates a router to login page
 app.get("/login", (req, res) => {
     res.render("login")
+})
+app.get("/logout", (req,res) => {
+    res.clearCookie("ourSimpleApp")
+    res.redirect("/")
 })
 
 
