@@ -2,6 +2,7 @@ require(`dotenv`).config()
 const express = require("express");
 const jwt = require(`jsonwebtoken`)
 const bcrypt = require("bcrypt");
+const cookieParser = require(`cookie-parser`)
 const app = express();
 const { Pool } = require('pg');
 const pool = new Pool({
@@ -17,23 +18,42 @@ const pool = new Pool({
         );
         `);
 })();
-//
-app.use(function (req,res,next){
-    res.locals.errors = []
-    next()
-})
-
 app.set("view engine","ejs");
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
+app.use(cookieParser())
+//
+app.use(function (req,res,next){
+    res.locals.errors = []
+    //try to decode cookie that is incoming
+    try{
+        const decode = jwt.verify(req.cookies.ourSimpleApp, process.env.JWTSECRET);
+        req.user = decode
+    }
+    catch(err){
+        console.log(err)
+        req.user = false
+    }
+    console.log(req.user)
+    res.locals.user = req.user
+    next()
+})
+
+
+
 //Creates a router to homepage
 app.get("/",(req, res) => {
+    if(req.user){
+        return res.render('dashboard')
+    }
+    
     res.render("homepage")
 })
 //Creates a router to login page
 app.get("/login", (req, res) => {
     res.render("login")
 })
+
 
 app.post("/register",async(req,res) =>{
     const errors = []
@@ -64,7 +84,7 @@ app.post("/register",async(req,res) =>{
         const salt = bcrypt.genSaltSync(10)
         const hash = bcrypt.hashSync(req.body.password, salt)
         const result = await pool.query(`
-            INSERT INTO users (username,password) VALUES ($1, $2) RETURNING id`,[req.body.username, hash]);
+            INSERT INTO users (username,password) VALUES ($1, $2) RETURNING id, username`,[req.body.username, hash]);
         newlyAddedID = result.rows[0]
     }
     catch(e){
@@ -73,7 +93,7 @@ app.post("/register",async(req,res) =>{
         return res.render('homepage', { errors });
     }
     // log user by giving them a cookie
-    const tokenVal = jwt.sign({exp: Math.floor(Date.now / 1000) + 60*60*24, id: newlyAddedID.id, username: newlyAddedID.username}, process.env.JWTSECRET)
+    const tokenVal = jwt.sign({exp: Math.floor(Date.now() / 1000)+60 *60*24, id: newlyAddedID.id, username: newlyAddedID.username}, process.env.JWTSECRET)
 
     res.cookie("ourSimpleApp",tokenVal, {
         httpOnly: true,
