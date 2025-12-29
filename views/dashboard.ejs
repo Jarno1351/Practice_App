@@ -7,22 +7,12 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h2>Apps Practice</h2>
-    </header>
-    <nav>
-        <% if(user){ %>
-            <a href="/create-post">Create Post</a>
-            <a href="/logout">Log Out</a>
-        <% }else{ %>
-            <a href="/login">Login</a>
-        <% }%>
-        
-    </nav>
+    <%- include("./includes/header") %>
 
     <main>
         <h2>Welcome to your dashboard</h2>
         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni, nisi.</p>
     </main>
+    <%- include("./includes/footer") %>
 </body>
 </html>

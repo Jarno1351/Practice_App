@@ -1,24 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
+    <%- include("./includes/head") %>
 <body>
-    <header>
-        <h2>Apps Practice</h2>
-    </header>
-    <nav>
-        <% if(user){ %>
-            <a href="/create-post">Create Post</a>
-            <a href="/logout">Log Out</a>
-        <% }else{ %>
-            <a href="/login">Login</a>
-        <% }%>
-        
-    </nav>
+    <%- include("./includes/header") %>
 
     <main>
         <form action="/register" method="post">
@@ -38,5 +22,6 @@
         </fieldset>
         </form>
     </main>
+    <%- include("./includes/footer") %>
 </body>
 </html>

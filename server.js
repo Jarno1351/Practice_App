@@ -105,6 +105,6 @@ app.post("/register",async(req,res) =>{
         sameSite: "strict",
         maxAge: 1000 * 60 * 60 * 24
     })
-    res.send("Thankyou")
+    res.redirect("/")
 })
 app.listen(3000)
