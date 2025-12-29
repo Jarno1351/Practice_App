@@ -1,4 +1,6 @@
+require(`dotenv`).config()
 const express = require("express");
+const jwt = require(`jsonwebtoken`)
 const bcrypt = require("bcrypt");
 const app = express();
 const { Pool } = require('pg');
@@ -66,10 +68,11 @@ app.post("/register",async(req,res) =>{
     catch(e){
         if (e.code === '23505') errors.push('Username taken');
         else errors.push('DB error');
-        console.log(e)
-        res.render('homepage', { errors });
+        return res.render('homepage', { errors });
     }
     // log user by giving them a cookie
+    const tokenVal = jwt.sign(app, b)
+
     res.cookie("ourSimpleApp","supersecret", {
         httpOnly: true,
         secure: true,
