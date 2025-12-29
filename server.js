@@ -59,11 +59,13 @@ app.post("/register",async(req,res) =>{
     }
     
     // save the user into a database
+    let newlyAddedID;
     try{
         const salt = bcrypt.genSaltSync(10)
         const hash = bcrypt.hashSync(req.body.password, salt)
-        await pool.query(`
-            INSERT INTO users (username,password) VALUES ($1, $2)`,[req.body.username, hash]);    
+        const result = await pool.query(`
+            INSERT INTO users (username,password) VALUES ($1, $2) RETURNING id`,[req.body.username, hash]);
+        newlyAddedID = result.rows[0]
     }
     catch(e){
         if (e.code === '23505') errors.push('Username taken');
@@ -71,9 +73,9 @@ app.post("/register",async(req,res) =>{
         return res.render('homepage', { errors });
     }
     // log user by giving them a cookie
-    const tokenVal = jwt.sign(app, b)
+    const tokenVal = jwt.sign({exp: Math.floor(Date.now / 1000) + 60*60*24, id: newlyAddedID.id, username: newlyAddedID.username}, process.env.JWTSECRET)
 
-    res.cookie("ourSimpleApp","supersecret", {
+    res.cookie("ourSimpleApp",tokenVal, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
