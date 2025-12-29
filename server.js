@@ -34,7 +34,7 @@ app.use(function (req,res,next){
         console.log(err)
         req.user = false
     }
-    console.log(req.user)
+    console.log(process.env.JWTSECRET)
     res.locals.user = req.user
     next()
 })
