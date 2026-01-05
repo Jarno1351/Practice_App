@@ -94,7 +94,7 @@ app.post("/login", async(req, res) => {
     
 })
 app.post("/register",async(req,res) =>{
-    const errors = []
+    let errors = []
     if (typeof req.body.username !== "string") req.body.username = ""
     if (typeof req.body.password !== "string") req.body.password = ""
 
@@ -106,7 +106,12 @@ app.post("/register",async(req,res) =>{
     if(req.body.username && !req.body.username.match(/^[a-zA-Z0-9]+$/)){
         errors.push("Username could contain letters and number")
     }
-
+    // check if username already exists
+    const {rows} = await pool.query("SELECT * FROM users WHERE username = $1", [req.body.username]);
+    if (rows.length){
+        errors = ["Username already exist!"]
+        res.render("homepage", {errors})
+    }
     if(!req.body.password) {errors.push("You must provide a password")}
     if (req.body.password && req.body.password.length < 6 || req.body.password && req.body.password.length > 15){
         errors.push("Password must be atleast 6 characters but not more than 15.")
