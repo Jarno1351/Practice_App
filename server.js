@@ -57,18 +57,41 @@ app.get("/logout", (req,res) => {
     res.redirect("/")
 })
 
-app.post("/login", (req, res) => {
-    const errors = []
+app.post("/login", async(req, res) => {
+    let errors = []
     if (typeof req.body.username !== "string") req.body.username = ""
     if (typeof req.body.password !== "string") req.body.password = ""
 
-    if(req.body.username.trim() === "" || req.body.password === "") errors.push("Do not pass an empty password/username");
+    if(req.body.username.trim() === "" || req.body.password === "") errors.push("Do not pass an empty password/username.");
     
     if (errors.length) {
         return res.render("login", {errors})
     }
+    const userInQuestion = await pool.query('SELECT * FROM users WHERE username = $1', [req.body.username]);
+    let userFromDataBase;
+    if(userInQuestion.rows.length){
+        userFromDataBase = userInQuestion.rows[0]
+    }
+    else{
+        errors = ["User does not exist"]
+        return res.render("login", {errors})
+    }
 
-    res.send("Thank You!!!")
+    const matchOrNot = bcrypt.compareSync(req.body.password, userFromDataBase.password);
+    if(!matchOrNot){
+        errors = ["Username and password does not match!"]
+        return res.render("login", {errors})
+    }
+    const tokenVal = jwt.sign({exp: Math.floor(Date.now() / 1000)+60 *60*24, id: userFromDataBase.id, username: userFromDataBase.username}, process.env.JWTSECRET)
+
+    res.cookie("ourSimpleApp",tokenVal, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60 * 24
+    })
+    res.redirect("/")
+    
 })
 app.post("/register",async(req,res) =>{
     const errors = []
