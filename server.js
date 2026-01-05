@@ -50,7 +50,7 @@ app.get("/",(req, res) => {
 })
 //Creates a router to login page
 app.get("/login", (req, res) => {
-    res.render("login")
+    return res.render("login")
 })
 app.get("/logout", (req,res) => {
     res.clearCookie("ourSimpleApp")
@@ -110,7 +110,7 @@ app.post("/register",async(req,res) =>{
     const {rows} = await pool.query("SELECT * FROM users WHERE username = $1", [req.body.username]);
     if (rows.length){
         errors = ["Username already exist!"]
-        res.render("homepage", {errors})
+        return res.render("homepage", {errors})
     }
     if(!req.body.password) {errors.push("You must provide a password")}
     if (req.body.password && req.body.password.length < 6 || req.body.password && req.body.password.length > 15){
