@@ -34,7 +34,6 @@ app.use(function (req,res,next){
         console.log(err)
         req.user = false
     }
-    console.log(process.env.JWTSECRET)
     res.locals.user = req.user
     next()
 })
@@ -58,7 +57,19 @@ app.get("/logout", (req,res) => {
     res.redirect("/")
 })
 
+app.post("/login", (req, res) => {
+    const errors = []
+    if (typeof req.body.username !== "string") req.body.username = ""
+    if (typeof req.body.password !== "string") req.body.password = ""
 
+    if(req.body.username.trim() === "" || req.body.password === "") errors.push("Do not pass an empty password/username");
+    
+    if (errors.length) {
+        return res.render("login", {errors})
+    }
+
+    res.send("Thank You!!!")
+})
 app.post("/register",async(req,res) =>{
     const errors = []
     if (typeof req.body.username !== "string") req.body.username = ""
