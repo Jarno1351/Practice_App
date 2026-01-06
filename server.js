@@ -95,7 +95,7 @@ function validatePosts(req){
     return errors
 }
 
-app.post("/create-post",mustBeLoggedIn, (req,res) => {
+app.post("/create-post",mustBeLoggedIn, async(req,res) => {
     const errors = validatePosts(req)
 
     if(errors.length){
@@ -103,9 +103,18 @@ app.post("/create-post",mustBeLoggedIn, (req,res) => {
     }
 
     //Save to Database
+    const results = await pool.query(`
+        INSERT INTO posts (title,body,authorid,createdDate)
+        VALUES($1, $2, $3, $4) RETURNING id;`, [req.body.title, req.body.body, req.user.id, new Date().toISOString()])
+    
+    
+    const postToGetID = results.rows[0].id;
+    const postURL = await pool.query(`
+        SELECT * FROM posts WHERE id = $1;`, [postToGetID]);
+    return res.redirect(`/posts/${postURL.rows[0].id}`)
 
 })
-
+    
 
 app.post("/login", async(req, res) => {
     let errors = []
