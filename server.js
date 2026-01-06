@@ -1,6 +1,7 @@
 require(`dotenv`).config()
 const express = require("express");
-const jwt = require(`jsonwebtoken`)
+const jwt = require(`jsonwebtoken`);
+const sanitizeHTML = require(`sanitize-html`);
 const bcrypt = require("bcrypt");
 const cookieParser = require(`cookie-parser`)
 const app = express();
@@ -15,6 +16,16 @@ const pool = new Pool({
         id SERIAL PRIMARY KEY,
         username VARCHAR(20) NOT NULL UNIQUE,
         password VARCHAR(100) NOT NULL
+        );
+        `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS posts(
+        id SERIAL PRIMARY KEY,
+        createdDate TEXT,
+        title VARCHAR(250) NOT NULL,
+        body TEXT NOT NULL,
+        authorid INTEGER REFERENCES users(id)
         );
         `);
 })();
@@ -62,15 +73,40 @@ function mustBeLoggedIn(req, res, next){
         return next()
     }
     return res.redirect("/")
+    next()
 }
 
-app.get("/create-post", (req,res) => {
+app.get("/create-post", mustBeLoggedIn,(req,res) => {
     res.render("create-post")
 })
 
-app.post("/create-post", (req,res) => {
-    res.send("ThankYou!")
+function validatePosts(req){
+    const errors = []
+    if(typeof req.body.title !== "string") req.body.title = "";
+    if(typeof req.body.body !== "string") req.body.body = "";
+    
+    // sanitize contents from having html
+    req.body.title = sanitizeHTML(req.body.title.trim(), {allowedTags: [], allowedAttributes: {}});
+    req.body.body = sanitizeHTML(req.body.body.trim(), {allowedTags: [], allowedAttributes: {}});
+
+
+    if(!req.body.title) errors.push("Do not provide an empty title");
+    if(!req.body.body) errors.push("Do not provide an empty content");
+    return errors
+}
+
+app.post("/create-post",mustBeLoggedIn, (req,res) => {
+    const errors = validatePosts(req)
+
+    if(errors.length){
+        return res.render("create-post",{errors})
+    }
+
+    //Save to Database
+
 })
+
+
 app.post("/login", async(req, res) => {
     let errors = []
     if (typeof req.body.username !== "string") req.body.username = ""
