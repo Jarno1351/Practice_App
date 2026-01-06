@@ -57,6 +57,20 @@ app.get("/logout", (req,res) => {
     res.redirect("/")
 })
 
+function mustBeLoggedIn(req, res, next){
+    if(req.user){
+        return next()
+    }
+    return res.redirect("/")
+}
+
+app.get("/create-post", (req,res) => {
+    res.render("create-post")
+})
+
+app.post("/create-post", (req,res) => {
+    res.send("ThankYou!")
+})
 app.post("/login", async(req, res) => {
     let errors = []
     if (typeof req.body.username !== "string") req.body.username = ""
